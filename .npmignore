@@ -1,0 +1,8 @@
+node_modules/
+specs/
+tests/
+coverage/
+*.log
+.env*
+.vscode/
+.idea/

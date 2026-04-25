@@ -1,0 +1,22 @@
+{
+  "name": "orbitarium-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-placeholder.mjs",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:contract": "vitest run tests/contract"
+  },
+  "dependencies": {
+    "three": "^0.176.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
+  }
+}
