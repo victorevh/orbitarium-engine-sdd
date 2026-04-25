@@ -1,0 +1,62 @@
+Build a modular 3D astronomical exploration engine using Three.js.
+
+The engine must support rendering and navigation of celestial environments with high visual quality and stable interaction systems.
+
+---
+
+### Core systems
+
+Camera System:
+
+* Smooth, stable, jitter-free camera
+* Support free navigation and orbital modes
+* Continuous zoom across large distances
+
+Navigation System:
+
+* Free movement in 3D space (X, Y, Z)
+* No implicit forces or automatic attraction
+* Optional inertia configuration
+
+Celestial Body System:
+
+* Pluggable celestial objects (stars, planets, moons)
+* Each body must define:
+
+  * Size
+  * Position
+  * Rotation
+  * Orbit behavior
+
+Rendering System:
+
+* High-quality rendering using Three.js
+* Star-based lighting (e.g., Sun as light source)
+* Subtle visual effects only (no exaggerated glow or explosions)
+
+Scaling System:
+
+* Handle large spatial scale differences
+* Smooth transitions between macro and micro views
+
+---
+
+### Constraints
+
+* The engine must not be hardcoded to a single solar system
+* All celestial data must be configurable
+* Systems must be modular and decoupled
+
+---
+
+### Non-goals
+
+* No game mechanics
+* No scoring or combat
+* No arcade-style visuals
+
+---
+
+### Outcome
+
+A reusable engine capable of rendering astronomical environments with smooth navigation and high visual fidelity.

@@ -1,0 +1,42 @@
+Create project principles for a modular 3D astronomical engine.
+
+Core philosophy:
+
+* The system must prioritize visual stability, smoothness, and clarity over feature quantity
+* All interactions must feel coherent in a spatial environment (movement, scale, camera behavior)
+
+Architecture principles:
+
+* Strong modularity (camera, navigation, rendering, celestial bodies must be independent systems)
+* Clear contracts between modules
+* No hidden or implicit behaviors (e.g., no automatic attraction forces)
+* Systems must be reusable and composable
+
+Rendering principles:
+
+* Visual quality must be high but controlled (no exaggerated effects)
+* Lighting must be physically plausible but can be simplified for performance
+* Avoid noisy or unstable visuals
+
+Interaction principles:
+
+* Camera must be stable and jitter-free
+* Navigation must support full 3D movement (X, Y, Z)
+* Movement must feel smooth with optional inertia
+
+Scalability:
+
+* The system must support large differences in scale (space ↔ planetary proximity)
+* Transitions must be smooth and continuous
+
+Non-goals:
+
+* No gamification elements
+* No scoring systems or arcade behaviors
+
+Quality:
+
+* Each module must be independently testable
+* Behavior must be predictable and deterministic
+
+The system must always favor stability, modularity, and visual clarity over complexity.
