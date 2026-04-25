@@ -1,38 +1,76 @@
-# Implementation Plan: Modular Astronomical Exploration Engine
+# Implementation Plan: Modular Astronomical Exploration Engine (MVP)
 
 **Branch**: `001-astronomical-engine` | **Date**: 2026-04-25 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-astronomical-engine/spec.md`
 
-**Note**: This template is filled in by the `/speckit-plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
-
 ## Summary
 
-Build a reusable, modular 3D astronomical exploration engine with stable free/orbital navigation, configurable celestial bodies, and deterministic behavior. The implementation will use a decoupled core architecture (camera, navigation, rendering, body simulation, validation) with explicit contracts and configuration-first scene loading.
+Deliver a minimal but fully functional astronomical exploration engine focused on one runnable scene with stable free/orbital navigation, circular/elliptical orbit simulation, and a basic rendering pipeline. EngineHandle is restricted to lifecycle orchestration and must delegate behavior to dedicated systems. All time-dependent behavior uses a TimeSource abstraction with a default real-time implementation. Defer multi-scene loading, performance benchmarking, and advanced scaling/precision systems to post-MVP iterations.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.6, Node.js 22.x (tooling), browser runtime with WebGL2  
-**Primary Dependencies**: Three.js, Zod (configuration validation), Vitest, Playwright  
-**Storage**: N/A (configuration files only, no persistent runtime storage in v1)  
-**Testing**: Vitest (unit/integration/contract), Playwright (interactive/browser smoke), deterministic simulation fixtures  
-**Target Platform**: Desktop-class browsers (Chrome/Edge/Firefox) with WebGL2 support  
+**Primary Dependencies**: Three.js, Zod, Vitest  
+**Storage**: N/A (configuration files only)  
+**Testing**: Vitest (unit/integration/contract) with deterministic fixtures  
+**Target Platform**: Desktop-class browsers with WebGL2 support  
 **Project Type**: Reusable frontend engine/library (single package)  
-**Performance Goals**: Sustain 60 FPS at up to 300 active celestial bodies on reference desktop hardware; jitter-free camera behavior on 95% of scripted paths  
-**Constraints**: Right-handed coordinate system only; real-time progression only (1x); no gamification behaviors; reject invalid configurations before scene activation  
-**Scale/Scope**: One active scene at a time; stars/planets/moons; circular+elliptical orbits; free+orbital navigation; one or more star-linked light sources
+**Performance Goals**: Stable interactive rendering for MVP demonstration scenes (formal benchmark targets deferred)  
+**Constraints**: Right-handed coordinates only, real-time progression only (1x), no gamification, full validation before scene activation, EngineHandle contains no business logic, no direct Date.now/performance.now calls inside navigation or simulation systems  
+**Scale/Scope**: Single-scene lifecycle, stars/planets/moons, circular+elliptical orbit simulation, free+orbital navigation, star-linked lighting
+
+## Architecture Boundaries
+
+### EngineHandle (Lifecycle + Orchestration Only)
+
+- Owns startup/shutdown lifecycle and frame orchestration.
+- Composes and invokes `NavigationController`, `SimulationSystem`, and `Renderer` in deterministic order.
+- Obtains frame time from `TimeSource` and passes normalized `TimeContext` to behavior systems.
+- Routes validated configuration to systems.
+- Must not implement navigation rules, orbital math, scene simulation rules, or rendering behavior.
+
+### NavigationController (Behavior System)
+
+- Owns free/orbital mode behavior and transitions.
+- Owns camera-target selection and user movement response.
+- Consumes `TimeContext` from orchestration.
+- Produces navigation state consumed by simulation/rendering orchestration.
+- Must not call `Date.now` or `performance.now` directly.
+
+### SimulationSystem (Behavior System)
+
+- Owns orbit and rotation updates (circular/elliptical) in real-time progression.
+- Owns deterministic transform updates for celestial bodies.
+- Consumes `TimeContext` from orchestration.
+- Exposes simulation snapshots/state to rendering.
+- Must not call `Date.now` or `performance.now` directly.
+
+### Renderer (Behavior System)
+
+- Owns scene graph updates and draw pipeline behavior.
+- Owns star-linked lighting application and visual frame output.
+- Renders from system state supplied by orchestration layer.
+
+### TimeSource (Cross-Cutting Abstraction)
+
+- Defines the canonical source of frame time for orchestration.
+- Produces monotonically increasing timestamps used to build `TimeContext` (`nowSeconds`, `deltaSeconds`).
+- Supports deterministic testing via injectable/custom implementations.
+- Default implementation is `RealTimeSource`.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before implementation and re-check after MVP completion.*
 
-- **Gate 1 - Stability First**: PASS. Camera update loop and navigation interpolation are designed for smoothness and jitter prevention as primary acceptance criteria.
-- **Gate 2 - Strong Modularity**: PASS. Architecture is split into independent subsystems (`camera`, `navigation`, `rendering`, `bodies`, `validation`) with explicit interfaces.
-- **Gate 3 - No Hidden Behavior**: PASS. No implicit attraction/auto-correction is allowed; all forces and mode switches are explicit and configurable.
-- **Gate 4 - Controlled Visual Quality**: PASS. Rendering includes physically plausible star lighting and intentionally subtle effects only.
-- **Gate 5 - Scalability and Smooth Transition**: PASS. Multi-scale zoom and transform handling are part of core design, with profile-based performance constraints.
-- **Gate 6 - Deterministic, Testable Behavior**: PASS. Module boundaries and deterministic simulation fixtures enable isolated tests and reproducible acceptance paths.
+- **Gate 1 - Stability First**: PASS. Camera stability and coherent interaction remain primary acceptance criteria.
+- **Gate 2 - Strong Modularity**: PASS. MVP keeps strict boundaries between orchestrator (`engine`) and behavior systems (`navigation`, `simulation`, `rendering`, `validation`).
+- **Gate 3 - No Hidden Behavior**: PASS. No implicit attraction; all movement/orbit behavior is explicit and configuration-driven.
+- **Gate 4 - Controlled Visual Quality**: PASS. Rendering remains physically plausible and visually restrained.
+- **Gate 5 - Scope Discipline**: PASS. Non-MVP systems (benchmarking, multi-scene, advanced precision/scaling) are deferred by design.
+- **Gate 6 - Deterministic/Testable Behavior**: PASS. Deterministic fixtures and module-level tests are retained in MVP.
+- **Gate 7 - Time Abstraction Discipline**: PASS. Time-dependent systems receive time only via `TimeSource`/`TimeContext`.
 
-Post-design re-check: PASS (no constitutional violations introduced by Phase 0/1 artifacts).
+Post-design re-check: PASS.
 
 ## Project Structure
 
@@ -40,12 +78,12 @@ Post-design re-check: PASS (no constitutional violations introduced by Phase 0/1
 
 ```text
 specs/001-astronomical-engine/
-├── plan.md              # This file (/speckit-plan command output)
-├── research.md          # Phase 0 output (/speckit-plan command)
-├── data-model.md        # Phase 1 output (/speckit-plan command)
-├── quickstart.md        # Phase 1 output (/speckit-plan command)
-├── contracts/           # Phase 1 output (/speckit-plan command)
-└── tasks.md             # Phase 2 output (/speckit-tasks command - NOT created by /speckit-plan)
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+└── tasks.md
 ```
 
 ### Source Code (repository root)
@@ -56,14 +94,14 @@ src/
 │   ├── camera/
 │   ├── navigation/
 │   ├── simulation/
-│   └── validation/
+│   ├── time/
+│   ├── validation/
+│   └── engine/
 ├── rendering/
 │   ├── scene/
-│   ├── lighting/
-│   └── materials/
+│   └── lighting/
 ├── config/
 │   ├── schema/
-│   ├── loader/
 │   └── transformers/
 └── index.ts
 
@@ -73,10 +111,25 @@ tests/
 └── unit/
 ```
 
-**Structure Decision**: Use a single-package engine library structure rooted at `src/`, with subsystem-oriented modules under `src/core/`, rendering adapters under `src/rendering/`, configuration boundaries under `src/config/`, and matching `tests/unit`, `tests/integration`, and `tests/contract` suites.
+**Structure Decision**: Keep a single-package library layout with subsystem boundaries for core lifecycle, navigation, orbit simulation, validation, rendering, and shared time abstraction.
+
+## Orchestration Sequence
+
+For each frame tick, orchestration executes in fixed order:
+
+1. `timeContext = TimeSource.sample()`
+2. `NavigationController.update(timeContext)`
+3. `SimulationSystem.update(timeContext)`
+4. `Renderer.render()`
+
+EngineHandle performs only this coordination flow and lifecycle control.
+
+## Deferred Work (Post-MVP)
+
+- Multi-scene catalog loader and scene-switching pipeline.
+- Advanced scaling and precision guard systems for extreme near/far ranges.
+- Benchmark runner and formal performance threshold automation.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-No constitutional violations require justification in this plan.
+No constitutional violations require justification in this MVP plan.
