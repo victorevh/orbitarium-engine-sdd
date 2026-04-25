@@ -1,0 +1,70 @@
+import type { Quaternion, Vector3 } from "./types";
+
+export type BodyType = "star" | "planet" | "moon";
+export type OrbitModel = "circular" | "elliptical";
+export type NavigationMode = "free" | "orbital";
+
+export interface ScaleProfile {
+  minZoom: number;
+  maxZoom: number;
+}
+
+export interface RotationProfile {
+  angularSpeed: number;
+  axis: Vector3;
+  phaseOffset?: number;
+}
+
+export interface OrbitProfile {
+  model: OrbitModel;
+  centerBodyId: string;
+  radius?: number;
+  semiMajorAxis?: number;
+  semiMinorAxis?: number;
+  angularSpeed: number;
+  phaseOffset?: number;
+}
+
+export interface CelestialBodyDefinition {
+  bodyId: string;
+  type: BodyType;
+  size: number;
+  initialPosition: Vector3;
+  rotation: RotationProfile;
+  orbit: OrbitProfile;
+}
+
+export interface LightingSourceDefinition {
+  lightId: string;
+  sourceBodyId: string;
+  intensity: number;
+  range: number;
+}
+
+export interface SceneConfiguration {
+  sceneId: string;
+  name: string;
+  coordinateSystem: "right-handed";
+  scaleProfile: ScaleProfile;
+  bodies: CelestialBodyDefinition[];
+  lights: LightingSourceDefinition[];
+}
+
+export interface NavigationState {
+  mode: NavigationMode;
+  position: Vector3;
+  orientation: Quaternion;
+  inertiaEnabled: boolean;
+  orbitalTargetBodyId?: string;
+  lastUpdateTick: number;
+}
+
+export interface SimulationSnapshot {
+  bodyPositions: Record<string, Vector3>;
+}
+
+export interface RenderInput {
+  scene: SceneConfiguration;
+  navigation: NavigationState;
+  simulation: SimulationSnapshot;
+}

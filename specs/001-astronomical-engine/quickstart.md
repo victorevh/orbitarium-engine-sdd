@@ -5,7 +5,7 @@ Plan: [plan.md](./plan.md)
 
 ## Goal
 
-Run a minimal scene with one star and two orbiting bodies, verify navigation modes, and validate configuration behavior.
+Run a minimal scene with one star and orbiting bodies, verify free/orbital navigation, and validate configuration behavior.
 
 ## Prerequisites
 
@@ -50,21 +50,12 @@ npm run test:integration
 Expected outcome:
 - Unit tests pass for camera, navigation, orbit, and validation modules.
 - Contract tests pass for config schema and engine API.
-- Integration tests pass for mode switching and scale transitions.
+- Integration tests pass for deterministic mode switching with TimeSource-driven updates.
 
-## 5. Run benchmark profile
-
-```bash
-npm run benchmark:scene -- --profile bodies-300
-```
-
-Expected outcome:
-- Benchmark report indicates >= 60 FPS for 95% of sampled frames on reference desktop hardware.
-
-## 6. Manual acceptance checks
+## 5. Manual acceptance checks
 
 - Switch free/orbital modes repeatedly and verify no visible camera jitter.
-- Zoom from system-scale to body-proximity and back without discontinuities.
+- Verify updates remain stable when using deterministic test TimeSource.
 - Confirm right-handed coordinate conventions by loading canonical sample scenes.
 
 ## Sample Minimal Scene (Contract-Oriented)
