@@ -16,7 +16,7 @@ const orbitSchema = z
   .object({
     model: z.enum(["circular", "elliptical"]),
     centerBodyId: z.string().min(1),
-    radius: z.number().positive().optional(),
+    radius: z.number().nonnegative().optional(),
     semiMajorAxis: z.number().positive().optional(),
     semiMinorAxis: z.number().positive().optional(),
     angularSpeed: z.number().finite(),
@@ -50,14 +50,28 @@ const orbitSchema = z
     }
   });
 
-const bodySchema = z.object({
-  bodyId: z.string().min(1),
-  type: z.enum(["star", "planet", "moon"]),
-  size: z.number().positive(),
-  initialPosition: vector3Schema,
-  rotation: rotationSchema,
-  orbit: orbitSchema,
-});
+const bodySchema = z
+  .object({
+    bodyId: z.string().min(1),
+    type: z.enum(["star", "planet", "moon"]),
+    size: z.number().positive(),
+    initialPosition: vector3Schema,
+    rotation: rotationSchema,
+    orbit: orbitSchema,
+  })
+  .superRefine((value, ctx) => {
+    if (value.orbit.model !== "circular" || typeof value.orbit.radius !== "number") {
+      return;
+    }
+
+    if (value.type !== "star" && value.orbit.radius <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["orbit", "radius"],
+        message: "non-star bodies require orbit.radius > 0 for circular model",
+      });
+    }
+  });
 
 const lightSchema = z.object({
   lightId: z.string().min(1),
