@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orbitarium Demo Viewer</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="toolbar">
+        <h1>Orbitarium Demo</h1>
+        <div class="actions">
+          <button id="free-btn" type="button">Free Mode</button>
+          <button id="orbital-btn" type="button">Orbital Mode</button>
+        </div>
+      </header>
+      <section id="viewer" class="viewer"></section>
+      <p id="status" class="status">Starting engine...</p>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
