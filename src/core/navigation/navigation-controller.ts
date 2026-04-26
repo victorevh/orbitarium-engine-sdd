@@ -12,6 +12,22 @@ export class NavigationController implements NavigationControllerPort {
 
   private state: NavigationState = createInitialNavigationState();
 
+  setFreeControlKeyState(key: string, pressed: boolean): void {
+    if (this.state.mode !== "free") {
+      return;
+    }
+
+    this.freeController.setKeyState(key, pressed);
+  }
+
+  applyFreeLookDelta(deltaX: number, deltaY: number): void {
+    if (this.state.mode !== "free") {
+      return;
+    }
+
+    this.freeController.applyMouseDelta(deltaX, deltaY);
+  }
+
   update(time: TimeContext): void {
     this.state =
       this.state.mode === "orbital"
