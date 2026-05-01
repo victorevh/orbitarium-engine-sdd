@@ -12,15 +12,27 @@ const rotationSchema = z.object({
   phaseOffset: z.number().finite().optional(),
 });
 
+const axialRotationSchema = z.object({
+  siderealPeriodDays: z.number().positive(),
+  axialTiltDeg: z.number().min(0).max(180),
+  initialPhaseDeg: z.number().finite().optional(),
+});
+
 const orbitSchema = z
   .object({
-    model: z.enum(["circular", "elliptical"]),
+    model: z.enum(["circular", "elliptical", "keplerian"]),
     centerBodyId: z.string().min(1),
     radius: z.number().nonnegative().optional(),
     semiMajorAxis: z.number().positive().optional(),
     semiMinorAxis: z.number().positive().optional(),
     angularSpeed: z.number().finite(),
     phaseOffset: z.number().finite().optional(),
+    semiMajorAxisAU: z.number().positive().optional(),
+    eccentricity: z.number().min(0).optional(),
+    inclinationDeg: z.number().finite().optional(),
+    longitudeAscendingNodeDeg: z.number().finite().optional(),
+    argumentPeriapsisDeg: z.number().finite().optional(),
+    meanAnomalyEpochDeg: z.number().finite().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.model === "circular" && typeof value.radius !== "number") {
@@ -48,6 +60,41 @@ const orbitSchema = z
         });
       }
     }
+
+    if (value.model === "keplerian") {
+      if (typeof value.semiMajorAxisAU !== "number" || value.semiMajorAxisAU <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["semiMajorAxisAU"],
+          message: "semiMajorAxisAU is required and must be > 0 for keplerian model",
+        });
+      }
+
+      if (typeof value.eccentricity !== "number" || value.eccentricity < 0 || value.eccentricity >= 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["eccentricity"],
+          message: "eccentricity is required and must satisfy 0 ≤ e < 1 for keplerian model",
+        });
+      }
+
+      const angleFields = [
+        "inclinationDeg",
+        "longitudeAscendingNodeDeg",
+        "argumentPeriapsisDeg",
+        "meanAnomalyEpochDeg",
+      ] as const;
+
+      for (const field of angleFields) {
+        if (typeof value[field] !== "number" || !isFinite(value[field] as number)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: `${field} is required and must be a finite number for keplerian model`,
+          });
+        }
+      }
+    }
   });
 
 const bodySchema = z
@@ -58,6 +105,7 @@ const bodySchema = z
     initialPosition: vector3Schema,
     rotation: rotationSchema,
     orbit: orbitSchema,
+    axialRotation: axialRotationSchema.optional(),
   })
   .superRefine((value, ctx) => {
     if (value.orbit.model !== "circular" || typeof value.orbit.radius !== "number") {
@@ -88,9 +136,15 @@ export const sceneConfigurationSchema = z
     scaleProfile: z.object({
       minZoom: z.number().positive(),
       maxZoom: z.number().positive(),
+      renderUnitsPerAU: z.number().positive().optional(),
     }),
     bodies: z.array(bodySchema).min(1),
     lights: z.array(lightSchema).min(1),
+    timeScale: z
+      .object({
+        simDaysPerRealSecond: z.number().positive(),
+      })
+      .optional(),
   })
   .superRefine((value, ctx) => {
     if (value.scaleProfile.maxZoom <= value.scaleProfile.minZoom) {
