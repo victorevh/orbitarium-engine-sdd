@@ -19,7 +19,6 @@ export function solveEccentricAnomaly(M: number, e: number): number {
 export function eccentricToTrueAnomaly(E: number, e: number): number {
   return 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
 }
-
 export function keplerianToCartesian(elements: KeplerianOrbitProfile, simTimeDays: number): Vector3 {
   const a = elements.semiMajorAxisAU;
   const e = elements.eccentricity;
@@ -28,7 +27,8 @@ export function keplerianToCartesian(elements: KeplerianOrbitProfile, simTimeDay
   const w = elements.argumentPeriapsisDeg * DEG_TO_RAD;
   const M0 = elements.meanAnomalyEpochDeg * DEG_TO_RAD;
 
-  const periodDays = 365.25 * Math.pow(a, 1.5);
+  // Use provided period if available (for non-solar orbits), otherwise calculate from Kepler's 3rd law
+  const periodDays = elements.siderealPeriodDays ?? 365.25 * Math.pow(Math.max(a, 1), 1.5);
   const M = M0 + (TWO_PI * simTimeDays) / periodDays;
 
   const E = solveEccentricAnomaly(M, e);
@@ -44,8 +44,6 @@ export function keplerianToCartesian(elements: KeplerianOrbitProfile, simTimeDay
   const cosTheta = Math.cos(theta);
   const sinTheta = Math.sin(theta);
 
-  // Convert from standard ecliptic (Z=north) to engine frame (Y=ecliptic north, XZ=ecliptic plane):
-  //   engine_x = X_ecl,  engine_y = Z_ecl,  engine_z = -Y_ecl  (right-handed)
   return {
     x: r * (cosOmega * cosTheta - sinOmega * sinTheta * cosI),
     y: r * (sinI * sinTheta),

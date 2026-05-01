@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import type { CelestialBodyDefinition, RenderInput } from "../../src/index";
+import type { ScaleTransform } from "../../src/core/simulation/scale-mapping";
+import { createScaleTransform } from "../../src/core/simulation/scale-mapping";
+import { scaleBodySize } from "../../src/rendering/scale-renderer";
 
 interface StarLayer {
   points: THREE.Points;
@@ -20,9 +23,32 @@ const typeColor: Record<CelestialBodyDefinition["type"], number> = {
   moon: 0xd8d8d8,
 };
 
-const scaleSize = (size: number): number => {
-  return Math.max(0.5, Math.sqrt(size) * 0.1);
+const createBodyMaterial = (body: CelestialBodyDefinition): THREE.MeshStandardMaterial => {
+  if (body.type === "star") {
+    return new THREE.MeshStandardMaterial({
+      color: typeColor.star,
+      emissive: 0xffb85b,
+      emissiveIntensity: 0.6,
+      roughness: 0.9,
+      metalness: 0,
+    });
+  }
+
+  if (body.type === "moon") {
+    return new THREE.MeshStandardMaterial({
+      color: typeColor.moon,
+      roughness: 1,
+      metalness: 0,
+    });
+  }
+
+  return new THREE.MeshStandardMaterial({
+    color: typeColor.planet,
+    roughness: 0.8,
+    metalness: 0.05,
+  });
 };
+
 
 const randomRange = (min: number, max: number): number => {
   return min + Math.random() * (max - min);
@@ -122,11 +148,41 @@ export class ThreeDemoRenderer {
 
   private resizeHandler: (() => void) | null = null;
 
+  private wheelHandler: ((e: WheelEvent) => void) | null = null;
+
   private orientationFeedback: OrientationFeedback | null = null;
 
   private starLayers: StarLayer[] = [];
 
   private backgroundTexture: THREE.CanvasTexture | null = null;
+
+  private scaleTransform: ScaleTransform;
+
+  // Zoom state — camera distance from the solar-system center (render units).
+  // Bounded by the scene's scale profile: [minCameraDistance, maxCameraDistance].
+  private cameraDistance: number;
+
+  private readonly minCameraDistance: number;
+
+  private readonly maxCameraDistance: number;
+
+  // Fixed offset added to the navigation position when computing camera direction.
+  // Keeps the camera at a useful starting angle even when nav starts at origin.
+  private static readonly INITIAL_OFFSET = { x: 0, y: 30, z: 150 };
+
+  constructor(
+    scaleTransform?: ScaleTransform,
+    scaleProfile?: { minZoom?: number; maxZoom?: number; renderUnitsPerAU?: number },
+  ) {
+    this.scaleTransform = scaleTransform ?? createScaleTransform(100);
+    const renderUnitsPerAU = scaleProfile?.renderUnitsPerAU ?? 100;
+    // maxCameraDistance: enough to see Neptune (~30 AU) and beyond
+    this.maxCameraDistance = renderUnitsPerAU * 40;
+    // minCameraDistance: stays above camera near-clip plane (0.1)
+    this.minCameraDistance = 0.5;
+    // Default starting distance gives a view of the inner solar system
+    this.cameraDistance = 150;
+  }
 
   attach(container: HTMLElement): void {
     this.container = container;
@@ -151,9 +207,6 @@ export class ThreeDemoRenderer {
       this.scene.add(layer.points);
     }
 
-    this.camera.position.set(0, 30, 120);
-    this.camera.lookAt(0, 0, 0);
-
     container.replaceChildren(this.renderer.domElement);
 
     const onResize = () => {
@@ -168,8 +221,21 @@ export class ThreeDemoRenderer {
       this.camera.updateProjectionMatrix();
     };
 
+    // Scroll up = zoom in (smaller cameraDistance); scroll down = zoom out.
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
+      this.cameraDistance = THREE.MathUtils.clamp(
+        this.cameraDistance * factor,
+        this.minCameraDistance,
+        this.maxCameraDistance,
+      );
+    };
+
     this.resizeHandler = onResize;
+    this.wheelHandler = onWheel;
     window.addEventListener("resize", onResize);
+    container.addEventListener("wheel", onWheel, { passive: false });
     onResize();
   }
 
@@ -177,6 +243,11 @@ export class ThreeDemoRenderer {
     if (this.resizeHandler) {
       window.removeEventListener("resize", this.resizeHandler);
       this.resizeHandler = null;
+    }
+
+    if (this.wheelHandler && this.container) {
+      this.container.removeEventListener("wheel", this.wheelHandler);
+      this.wheelHandler = null;
     }
 
     this.bodyMeshes.forEach((mesh) => {
@@ -216,20 +287,56 @@ export class ThreeDemoRenderer {
 
     for (const body of input.scene.bodies) {
       if (!this.bodyMeshes.has(body.bodyId)) {
-        const geometry = new THREE.SphereGeometry(scaleSize(body.size), 24, 24);
-        const material = new THREE.MeshStandardMaterial({ color: typeColor[body.type] });
+        const geometry = new THREE.SphereGeometry(scaleBodySize(body.size), 24, 24);
+        const material = createBodyMaterial(body);
         const mesh = new THREE.Mesh(geometry, material);
         this.scene.add(mesh);
         this.bodyMeshes.set(body.bodyId, mesh);
       }
 
       const mesh = this.bodyMeshes.get(body.bodyId);
-      const position = input.simulation.bodyPositions[body.bodyId] ?? body.initialPosition;
-      mesh?.position.set(position.x, position.y, position.z);
+      if (!mesh) {
+        continue;
+      }
+
+      // Check if this body has a Keplerian state in bodyStates
+      if (input.simulation.bodyStates[body.bodyId]) {
+        const state = input.simulation.bodyStates[body.bodyId];
+        const renderPosition = this.scaleTransform.auToRender(state.positionAU);
+        mesh.position.set(renderPosition.x, renderPosition.y, renderPosition.z);
+
+        // Apply axial rotation as a quaternion
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromAxisAngle(
+          new THREE.Vector3(state.rotationAxis.x, state.rotationAxis.y, state.rotationAxis.z),
+          state.rotationAngle,
+        );
+        mesh.quaternion.copy(quaternion);
+      } else {
+        // Fall back to bodyPositions for circular/elliptical bodies
+        const position = input.simulation.bodyPositions[body.bodyId] ?? body.initialPosition;
+        mesh.position.set(position.x, position.y, position.z);
+        // No rotation for legacy bodies
+        mesh.quaternion.set(0, 0, 0, 1);
+      }
     }
 
     const navigation = input.navigation;
-    this.camera.position.set(navigation.position.x, navigation.position.y, navigation.position.z);
+
+    // Camera position: combine the navigation controller's position with a fixed
+    // initial offset so the camera starts at a useful viewpoint (not at the Sun).
+    // Zoom is applied by placing the camera at cameraDistance from origin along
+    // this combined direction — scroll wheel changes cameraDistance.
+    const off = ThreeDemoRenderer.INITIAL_OFFSET;
+    const bx = navigation.position.x + off.x;
+    const by = navigation.position.y + off.y;
+    const bz = navigation.position.z + off.z;
+    const bLen = Math.sqrt(bx * bx + by * by + bz * bz) || 1;
+    this.camera.position.set(
+      (bx / bLen) * this.cameraDistance,
+      (by / bLen) * this.cameraDistance,
+      (bz / bLen) * this.cameraDistance,
+    );
 
     if (navigation.mode === "free") {
       this.camera.quaternion.set(
@@ -240,8 +347,10 @@ export class ThreeDemoRenderer {
       );
     } else {
       const targetBody = navigation.orbitalTargetBodyId
-        ? input.simulation.bodyPositions[navigation.orbitalTargetBodyId] ??
-          input.scene.bodies.find((body) => body.bodyId === navigation.orbitalTargetBodyId)?.initialPosition
+        ? input.simulation.bodyStates[navigation.orbitalTargetBodyId]
+          ? this.scaleTransform.auToRender(input.simulation.bodyStates[navigation.orbitalTargetBodyId].positionAU)
+          : input.simulation.bodyPositions[navigation.orbitalTargetBodyId] ??
+            input.scene.bodies.find((body) => body.bodyId === navigation.orbitalTargetBodyId)?.initialPosition
         : undefined;
 
       const target = targetBody ?? { x: 0, y: 0, z: 0 };

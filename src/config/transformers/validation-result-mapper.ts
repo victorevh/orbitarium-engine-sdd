@@ -9,7 +9,7 @@ const normalizePath = (path: Array<string | number>): string => {
   return path
     .map((segment) => (typeof segment === "number" ? `[${segment}]` : `.${segment}`))
     .join("")
-    .replace(/^\./, "$");
+    .replace(/^\./, "$.");
 };
 
 export const mapZodErrorToValidationErrors = (error: ZodError): ValidationError[] => {

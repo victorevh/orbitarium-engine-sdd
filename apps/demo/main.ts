@@ -1,5 +1,9 @@
 import { EngineHandle, NavigationController, type SceneConfiguration } from "../../src/index";
 import { ThreeDemoRenderer } from "./three-demo-renderer";
+import { createScaleTransform } from "../../src/core/simulation/scale-mapping";
+import solarSystemScene from "../../specs/samples/solar-system-complete.json";
+import noMoonScene from "../../specs/samples/solar-system-no-moon.json";
+import customBodyScene from "../../specs/samples/solar-system-custom-body.json";
 
 const status = document.getElementById("status");
 const viewer = document.getElementById("viewer");
@@ -10,79 +14,31 @@ if (!status || !viewer || !freeButton || !orbitalButton) {
   throw new Error("Demo DOM is missing required elements.");
 }
 
-const scene: SceneConfiguration = {
-  sceneId: "demo-scene",
-  name: "Minimal Demo System",
-  coordinateSystem: "right-handed",
-  scaleProfile: {
-    minZoom: 0.001,
-    maxZoom: 10000,
-  },
-  bodies: [
-    {
-      bodyId: "sun-1",
-      type: "star",
-      size: 350,
-      initialPosition: { x: 0, y: 0, z: 0 },
-      rotation: { angularSpeed: 0.01, axis: { x: 0, y: 1, z: 0 } },
-      orbit: {
-        model: "circular",
-        centerBodyId: "sun-1",
-        radius: 0,
-        angularSpeed: 0,
-      },
-    },
-    {
-      bodyId: "planet-1",
-      type: "planet",
-      size: 48,
-      initialPosition: { x: 120, y: 0, z: 0 },
-      rotation: { angularSpeed: 0.02, axis: { x: 0, y: 1, z: 0 } },
-      orbit: {
-        model: "circular",
-        centerBodyId: "sun-1",
-        radius: 120,
-        angularSpeed: 0.35,
-      },
-    },
-    {
-      bodyId: "moon-1",
-      type: "moon",
-      size: 16,
-      initialPosition: { x: 160, y: 0, z: 0 },
-      rotation: { angularSpeed: 0.03, axis: { x: 0, y: 1, z: 0 } },
-      orbit: {
-        model: "elliptical",
-        centerBodyId: "planet-1",
-        semiMajorAxis: 40,
-        semiMinorAxis: 26,
-        angularSpeed: 1.1,
-      },
-    },
-  ],
-  lights: [
-    {
-      lightId: "sun-light",
-      sourceBodyId: "sun-1",
-      intensity: 1,
-      range: 5000,
-    },
-  ],
+const scenes: Record<string, SceneConfiguration> = {
+  complete: solarSystemScene as any,
+  "no-moon": noMoonScene as any,
+  custom: customBodyScene as any,
 };
 
-const demoRenderer = new ThreeDemoRenderer();
+const sceneName = new URL(window.location.href).searchParams.get("scene") ?? "complete";
+const sceneToLoad: SceneConfiguration = scenes[sceneName] ?? scenes.complete;
+const scaleTransform = createScaleTransform(sceneToLoad.scaleProfile.renderUnitsPerAU ?? 100);
+const demoRenderer = new ThreeDemoRenderer(scaleTransform, sceneToLoad.scaleProfile);
 const navigationController = new NavigationController();
 const engine = new EngineHandle({ renderer: demoRenderer, navigationController });
-const validation = engine.loadScene(scene);
+
+let validation = engine.loadScene(sceneToLoad);
 
 if (!validation.valid) {
   status.textContent = `Scene validation failed: ${validation.errors.map((e) => e.message).join(" | ")}`;
   throw new Error(status.textContent);
 }
 
-engine.start(viewer as HTMLElement);
+let currentScene = sceneToLoad;
+let currentTimeScale = sceneToLoad.timeScale?.simDaysPerRealSecond ?? 1;
+status.textContent = `Loaded scene: ${currentScene.sceneId}`;
 
-const format = (value: number): string => value.toFixed(2);
+engine.start(viewer as HTMLElement);
 
 const getDirectionHint = (x: number, y: number, z: number): string => {
   const absX = Math.abs(x);
@@ -100,20 +56,37 @@ const getDirectionHint = (x: number, y: number, z: number): string => {
   return z >= 0 ? "+Z" : "-Z";
 };
 
+// J2000.0 epoch: 2000-Jan-01 12:00 UTC — the reference for all orbital elements.
+const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
+
+const formatSimDate = (simulatedDays: number): string => {
+  const ms = J2000_MS + simulatedDays * 86_400_000;
+  return new Date(ms).toISOString().slice(0, 10);
+};
+
 const updateStatus = (): void => {
   const feedback = demoRenderer.getOrientationFeedback();
   if (!feedback) {
     return;
   }
 
+  const simulatedDays = engine.getSimulatedDays();
+  const simDate = formatSimDate(simulatedDays);
+  const earthOrbits = Math.floor(simulatedDays / 365.25);
+  const moonOrbits = Math.floor(simulatedDays / 27.3216);
+
   const modeLabel = feedback.mode === "orbital" ? `Orbital (${feedback.orbitalTargetBodyId ?? "no target"})` : "Free";
   const directionHint = getDirectionHint(feedback.forward.x, feedback.forward.y, feedback.forward.z);
+  const timeScaleStr = currentTimeScale.toFixed(3);
 
-  status.textContent = `Mode: ${modeLabel} | Pos: (${format(feedback.position.x)}, ${format(feedback.position.y)}, ${format(
-    feedback.position.z,
-  )}) | Forward: (${format(feedback.forward.x)}, ${format(feedback.forward.y)}, ${format(
-    feedback.forward.z,
-  )}) ${directionHint}`;
+  status.textContent = [
+    `Date: ${simDate}`,
+    `Earth: ${earthOrbits} orb`,
+    `Moon: ${moonOrbits} orb`,
+    `Speed: ${timeScaleStr} d/s`,
+    `Mode: ${modeLabel}`,
+    `Fwd: ${directionHint}`,
+  ].join(" | ");
 };
 
 const tickStatus = (): void => {
@@ -136,6 +109,32 @@ const clearFreeInputs = (): void => {
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
+
+  // Time scale controls
+  if (key === "=" || key === "+") {
+    event.preventDefault();
+    const newRate = Math.min(currentTimeScale * 2, 365250);
+    engine.setTimeScale(newRate);
+    currentTimeScale = newRate;
+    return;
+  }
+
+  if (key === "-" || key === "_") {
+    event.preventDefault();
+    const newRate = Math.max(currentTimeScale / 2, 0.001);
+    engine.setTimeScale(newRate);
+    currentTimeScale = newRate;
+    return;
+  }
+
+  if (key === "0") {
+    event.preventDefault();
+    engine.setTimeScale(1.0);
+    currentTimeScale = 1.0;
+    return;
+  }
+
+  // Free navigation controls
   if (!freeKeys.has(key)) {
     return;
   }
@@ -197,7 +196,7 @@ freeButton.addEventListener("click", () => {
 });
 
 orbitalButton.addEventListener("click", () => {
-  engine.setNavigationMode("orbital", { targetBodyId: "planet-1" });
+  engine.setNavigationMode("orbital", { targetBodyId: "sun" });
   clearFreeInputs();
   updateStatus();
 });

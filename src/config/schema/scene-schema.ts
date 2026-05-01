@@ -27,7 +27,7 @@ const orbitSchema = z
     semiMinorAxis: z.number().positive().optional(),
     angularSpeed: z.number().finite(),
     phaseOffset: z.number().finite().optional(),
-    semiMajorAxisAU: z.number().positive().optional(),
+    semiMajorAxisAU: z.number().nonnegative().optional(),
     eccentricity: z.number().min(0).optional(),
     inclinationDeg: z.number().finite().optional(),
     longitudeAscendingNodeDeg: z.number().finite().optional(),
@@ -62,11 +62,17 @@ const orbitSchema = z
     }
 
     if (value.model === "keplerian") {
-      if (typeof value.semiMajorAxisAU !== "number" || value.semiMajorAxisAU <= 0) {
+      if (typeof value.semiMajorAxisAU !== "number") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["semiMajorAxisAU"],
-          message: "semiMajorAxisAU is required and must be > 0 for keplerian model",
+          message: "semiMajorAxisAU is required for keplerian model",
+        });
+      } else if (value.semiMajorAxisAU < 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["semiMajorAxisAU"],
+          message: "semiMajorAxisAU must be >= 0 for keplerian model",
         });
       }
 
@@ -121,6 +127,13 @@ const bodySchema = z
     }
   });
 
+const sourceMetadataSchema = z.object({
+  epoch: z.string().min(1).optional(),
+  source: z.string().min(1).optional(),
+  referenceDate: z.string().min(1).optional(),
+  notes: z.string().min(1).optional(),
+});
+
 const lightSchema = z.object({
   lightId: z.string().min(1),
   sourceBodyId: z.string().min(1),
@@ -145,6 +158,7 @@ export const sceneConfigurationSchema = z
         simDaysPerRealSecond: z.number().positive(),
       })
       .optional(),
+    sourceMetadata: sourceMetadataSchema.optional(),
   })
   .superRefine((value, ctx) => {
     if (value.scaleProfile.maxZoom <= value.scaleProfile.minZoom) {
@@ -155,6 +169,33 @@ export const sceneConfigurationSchema = z
       });
     }
 
+
+    const bodyMap = new Map(value.bodies.map((body) => [body.bodyId, body]));
+
+    value.bodies.forEach((body, bodyIndex) => {
+      if (body.type !== "moon") {
+        return;
+      }
+
+      const parentBody = bodyMap.get(body.orbit.centerBodyId);
+
+      if (!parentBody) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["bodies", bodyIndex, "orbit", "centerBodyId"],
+          message: `moon body ${body.bodyId} must reference an existing parent body`,
+        });
+        return;
+      }
+
+      if (parentBody.type !== "planet") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["bodies", bodyIndex, "orbit", "centerBodyId"],
+          message: `moon body ${body.bodyId} must reference a planet parent body`,
+        });
+      }
+    });
     const ids = new Set<string>();
     for (const body of value.bodies) {
       if (ids.has(body.bodyId)) {
