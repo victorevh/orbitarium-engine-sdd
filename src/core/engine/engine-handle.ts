@@ -22,6 +22,8 @@ export interface EngineOptions {
 export class EngineHandle {
   private animationToken: ReturnType<typeof setTimeout> | null = null;
 
+  private manualTick = 0;
+
   private running = false;
 
   private scene: SceneConfiguration | null = null;
@@ -49,6 +51,14 @@ export class EngineHandle {
 
     this.scene = config;
     this.simulationSystem.applyScene(config);
+    
+    // Perform initial update to populate body states
+    this.simulationSystem.update({
+      deltaSeconds: 0,
+      nowSeconds: 0,
+      tick: this.manualTick,
+    });
+    
     return validation;
   }
 
@@ -91,8 +101,37 @@ export class EngineHandle {
     return this.navigationController.getState();
   }
 
+  getBodyStates(): Record<string, import("../models").SimBodyState> {
+    const snapshot = this.simulationSystem.getSnapshot();
+    return snapshot.bodyStates;
+  }
+
   setInertia(enabled: boolean): void {
     this.navigationController.setInertia(enabled);
+  }
+
+  setTimeScale(simDaysPerRealSecond: number): void {
+    if (simDaysPerRealSecond <= 0) {
+      throw new RangeError("simDaysPerRealSecond must be positive");
+    }
+    this.simulationSystem.setTimeScale(simDaysPerRealSecond);
+  }
+
+  getSimulatedDays(): number {
+    return this.simulationSystem.getSnapshot().simulatedDays;
+  }
+
+  update(deltaSeconds: number): void {
+    if (!this.scene) {
+      throw new Error("Cannot update engine before loading a valid scene");
+    }
+
+    this.manualTick += 1;
+    this.simulationSystem.update({
+      deltaSeconds,
+      nowSeconds: (this.timeSource.sample()).nowSeconds + deltaSeconds,
+      tick: this.manualTick,
+    });
   }
 
   private frame(): void {

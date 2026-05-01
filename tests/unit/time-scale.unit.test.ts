@@ -48,4 +48,34 @@ describe("TimeScale", () => {
     ts.advance(1); // simTimeDays = 1 + 2 = 3
     expect(ts.getSimTimeDays()).toBeCloseTo(3, 8);
   });
+
+  it("setRate(365.25) after advance changes future accumulation without resetting simTimeDays", () => {
+    const ts = new TimeScale(1);
+    ts.advance(1); // simTimeDays = 1
+    const beforeSetRate = ts.getSimTimeDays();
+    ts.setRate(365.25);
+    const afterSetRate = ts.getSimTimeDays();
+    expect(beforeSetRate).toBe(afterSetRate); // no discontinuity
+    ts.advance(1);
+    expect(ts.getSimTimeDays()).toBeCloseTo(1 + 365.25, 5);
+  });
+
+  it("setRate(0.001) followed by advance accumulates only 0.001 simulated days per real second", () => {
+    const ts = new TimeScale(1);
+    ts.setRate(0.001);
+    ts.advance(1);
+    expect(ts.getSimTimeDays()).toBeCloseTo(0.001, 8);
+    ts.advance(1);
+    expect(ts.getSimTimeDays()).toBeCloseTo(0.002, 8);
+  });
+
+  it("setRate(0) throws an error", () => {
+    const ts = new TimeScale(1);
+    expect(() => ts.setRate(0)).toThrow();
+  });
+
+  it("setRate(-1) throws an error", () => {
+    const ts = new TimeScale(1);
+    expect(() => ts.setRate(-1)).toThrow();
+  });
 });

@@ -47,6 +47,7 @@ export interface KeplerianOrbitProfile {
   longitudeAscendingNodeDeg: number;
   argumentPeriapsisDeg: number;
   meanAnomalyEpochDeg: number;
+  siderealPeriodDays?: number;
 }
 
 export interface CelestialBodyDefinition {
@@ -70,6 +71,13 @@ export interface TimeScaleConfig {
   simDaysPerRealSecond: number;
 }
 
+export interface SourceMetadata {
+  epoch?: string;
+  source?: string;
+  referenceDate?: string;
+  notes?: string;
+}
+
 export interface SceneConfiguration {
   sceneId: string;
   name: string;
@@ -78,6 +86,7 @@ export interface SceneConfiguration {
   bodies: CelestialBodyDefinition[];
   lights: LightingSourceDefinition[];
   timeScale?: TimeScaleConfig;
+  sourceMetadata?: SourceMetadata;
 }
 
 export interface NavigationState {

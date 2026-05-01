@@ -72,13 +72,13 @@ confirm Earth has returned to approximately its starting position (±5%).
 
 - [x] T013 [P] [US1] Implement `src/core/simulation/time-scale.ts`: export `class TimeScale` with constructor `(simDaysPerRealSecond: number = 1)`; method `advance(deltaSeconds: number): void` accumulates `simTimeDays += deltaSeconds × simDaysPerRealSecond`; method `getSimTimeDays(): number`; method `setRate(simDaysPerRealSecond: number): void` (validates > 0, does NOT reset simTimeDays); no imports beyond TypeScript builtins
 
-- [ ] T014 [US1] Add `solveKeplerianPosition(body: CelestialBodyDefinition, centerPosition: Vector3, simTimeDays: number): Vector3` to `src/core/simulation/orbit-solver.ts` using `keplerianToCartesian` from `orbital-elements.ts`; add centerPosition offset to returned AU-space Vector3; existing `solveBodyPosition()` function and its circular/elliptical paths are NOT modified
+- [x] T014 [US1] Add `solveKeplerianPosition(body: CelestialBodyDefinition, centerPosition: Vector3, simTimeDays: number): Vector3` to `src/core/simulation/orbit-solver.ts` using `keplerianToCartesian` from `orbital-elements.ts`; add centerPosition offset to returned AU-space Vector3; existing `solveBodyPosition()` function and its circular/elliptical paths are NOT modified
 
-- [ ] T015 [US1] Update `src/core/simulation/simulation-system.ts`: add `private timeScale: TimeScale` initialized from `scene.timeScale?.simDaysPerRealSecond ?? 1`; in `update(time: TimeContext)` call `timeScale.advance(time.deltaSeconds)` first; for each body with `orbit.model === "keplerian"`, call `solveKeplerianPosition` and `solveRotation`, populate `bodyStates[id]`; for circular/elliptical bodies, continue calling existing `solveBodyPosition` and populate `bodyPositions[id]`; initialize snapshot as `{ bodyPositions: {}, bodyStates: {}, simulatedDays: 0 }`; expose `setTimeScale(rate: number): void` delegating to `timeScale.setRate(rate)`
+- [x] T015 [US1] Update `src/core/simulation/simulation-system.ts`: add `private timeScale: TimeScale` initialized from `scene.timeScale?.simDaysPerRealSecond ?? 1`; in `update(time: TimeContext)` call `timeScale.advance(time.deltaSeconds)` first; for each body with `orbit.model === "keplerian"`, call `solveKeplerianPosition` and `solveRotation`, populate `bodyStates[id]`; for circular/elliptical bodies, continue calling existing `solveBodyPosition` and populate `bodyPositions[id]`; initialize snapshot as `{ bodyPositions: {}, bodyStates: {}, simulatedDays: 0 }`; expose `setTimeScale(rate: number): void` delegating to `timeScale.setRate(rate)` 
 
-- [ ] T016 [US1] Update `apps/demo/three-demo-renderer.ts`: add `scaleTransform: ScaleTransform` constructor parameter (after existing params); in the per-frame mesh position update, check if `simulation.bodyStates[body.bodyId]` exists — if so, use `scaleTransform.auToRender(bodyStates[id].positionAU)` for position and apply `bodyStates[id].rotationAxis` / `bodyStates[id].rotationAngle` as a quaternion (`setFromAxisAngle`) to the mesh; for bodies in `bodyPositions`, continue using direct position (unchanged path)
+- [x] T016 [US1] Update `apps/demo/three-demo-renderer.ts`: add `scaleTransform: ScaleTransform` constructor parameter (after existing params); in the per-frame mesh position update, check if `simulation.bodyStates[body.bodyId]` exists — if so, use `scaleTransform.auToRender(bodyStates[id].positionAU)` for position and apply `bodyStates[id].rotationAxis` / `bodyStates[id].rotationAngle` as a quaternion (`setFromAxisAngle`) to the mesh; for bodies in `bodyPositions`, continue using direct position (unchanged path)
 
-- [ ] T017 [US1] Update `apps/demo/main.ts`: import `solar-system.json` from `../../specs/samples/solar-system.json`; import `createScaleTransform` from `../../src/core/simulation/scale-mapping`; create `scaleTransform = createScaleTransform(scene.scaleProfile.renderUnitsPerAU ?? 100)`; pass `scaleTransform` to `ThreeDemoRenderer` constructor; load solar system scene via `engine.loadScene(solarSystemScene)` in addition to or replacing the existing demo scene
+- [x] T017 [US1] Update `apps/demo/main.ts`: import `solar-system.json` from `../../specs/samples/solar-system.json`; import `createScaleTransform` from `../../src/core/simulation/scale-mapping`; create `scaleTransform = createScaleTransform(scene.scaleProfile.renderUnitsPerAU ?? 100)`; pass `scaleTransform` to `ThreeDemoRenderer` constructor; load solar system scene via `engine.loadScene(solarSystemScene)` in addition to or replacing the existing demo scene
 
 **Checkpoint**: `npm run demo` opens a browser showing all 8 planets orbiting the Sun with visible axial tilt. Earth completes one orbit in ~365 real seconds.
 
@@ -94,15 +94,15 @@ Invalid configs are rejected before simulation starts.
 
 ### Tests for User Story 2 ⚠️ Write FIRST — must FAIL before implementation
 
-- [ ] T018 [P] [US2] Add Keplerian validation cases to `tests/contract/scene-validation.contract.test.ts`: assert valid Keplerian body (Earth elements) is accepted; assert `eccentricity: 1.0` produces validation error at path `$.bodies[N].orbit.eccentricity`; assert `eccentricity: -0.1` is rejected; assert missing `semiMajorAxisAU` on a `model:"keplerian"` orbit is rejected; assert `axialTiltDeg: 200` is rejected; assert `siderealPeriodDays: -1` is rejected; assert optional `axialRotation` absent on a Keplerian body is accepted
+- [x] T018 [P] [US2] Add Keplerian validation cases to `tests/contract/scene-validation.contract.test.ts`: assert valid Keplerian body (Earth elements) is accepted; assert `eccentricity: 1.0` produces validation error at path `$.bodies[N].orbit.eccentricity`; assert `eccentricity: -0.1` is rejected; assert missing `semiMajorAxisAU` on a `model:"keplerian"` orbit is rejected; assert `axialTiltDeg: 200` is rejected; assert `siderealPeriodDays: -1` is rejected; assert optional `axialRotation` absent on a Keplerian body is accepted
 
-- [ ] T019 [US2] Write failing integration test in `tests/integration/simulation-layer-isolation.integration.test.ts` that reads the source of `src/core/simulation/simulation-system.ts`, `src/core/simulation/orbit-solver.ts`, `src/core/simulation/orbital-elements.ts`, `src/core/simulation/rotation-solver.ts`, `src/core/simulation/time-scale.ts` using `fs.readFileSync` and asserts none of them contain the string `"scale-mapping"` or `"ScaleTransform"` or `"Date.now"` or `"performance.now"`
+- [x] T019 [US2] Write failing integration test in `tests/integration/simulation-layer-isolation.integration.test.ts` that reads the source of `src/core/simulation/simulation-system.ts`, `src/core/simulation/orbit-solver.ts`, `src/core/simulation/orbital-elements.ts`, `src/core/simulation/rotation-solver.ts`, `src/core/simulation/time-scale.ts` using `fs.readFileSync` and asserts none of them contain the string `"scale-mapping"` or `"ScaleTransform"` or `"Date.now"` or `"performance.now"`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Confirm `scene-validation.contract.test.ts` tests pass after T002/T003 schema changes; if any Keplerian validation case fails, fix the Zod refinement in `src/config/schema/scene-schema.ts` until all T018 tests pass
+- [x] T020 [US2] Confirm `scene-validation.contract.test.ts` tests pass after T002/T003 schema changes; if any Keplerian validation case fails, fix the Zod refinement in `src/config/schema/scene-schema.ts` until all T018 tests pass
 
-- [ ] T021 [US2] Confirm `simulation-layer-isolation.integration.test.ts` passes after US1 implementation; if any violation found (scale-mapping or Date.now in simulation files), remove the violation from the offending file in `src/core/simulation/`
+- [x] T021 [US2] Confirm `simulation-layer-isolation.integration.test.ts` passes after US1 implementation; if any violation found (scale-mapping or Date.now in simulation files), remove the violation from the offending file in `src/core/simulation/`
 
 **Checkpoint**: `npm run validate:scene -- specs/samples/solar-system.json` exits 0. Adding a new Keplerian body to the JSON config with valid elements produces correct orbital motion on reload.
 
@@ -118,15 +118,15 @@ halve it, press `0` to reset; confirm all orbital motion remains smooth with no 
 
 ### Tests for User Story 3 ⚠️ Write FIRST — must FAIL before implementation
 
-- [ ] T022 [P] [US3] Add rate-change tests to `tests/unit/time-scale.unit.test.ts`: test `setRate(365.25)` after `advance(1, 1)` changes future accumulation without resetting `simTimeDays`; test `setRate(0.001)` followed by `advance(1, ...)` accumulates only 0.001 simulated days; test that `simTimeDays` is identical before and immediately after `setRate(...)` (no discontinuity); test `setRate(0)` throws or is rejected with a validation error; test `setRate(-1)` throws or is rejected
+- [x] T022 [P] [US3] Add rate-change tests to `tests/unit/time-scale.unit.test.ts`: test `setRate(365.25)` after `advance(1, 1)` changes future accumulation without resetting `simTimeDays`; test `setRate(0.001)` followed by `advance(1, ...)` accumulates only 0.001 simulated days; test that `simTimeDays` is identical before and immediately after `setRate(...)` (no discontinuity); test `setRate(0)` throws or is rejected with a validation error; test `setRate(-1)` throws or is rejected
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Verify `SimulationSystem.setTimeScale(rate: number)` from T015 validates `rate > 0` (throws `RangeError` for `rate ≤ 0`) and delegates to `TimeScale.setRate(rate)` without modifying `simTimeDays`
+- [x] T023 [US3] Verify `SimulationSystem.setTimeScale(rate: number)` from T015 validates `rate > 0` (throws `RangeError` for `rate ≤ 0`) and delegates to `TimeScale.setRate(rate)` without modifying `simTimeDays`
 
-- [ ] T024 [US3] Add `setTimeScale(simDaysPerRealSecond: number): void` to `EngineHandle` in `src/core/engine/engine-handle.ts` that calls `this.simulationSystem.setTimeScale(simDaysPerRealSecond)`; also update `src/core/engine/system-ports.ts` `SimulationSystem` interface if `setTimeScale` needs to be on the port
+- [x] T024 [US3] Add `setTimeScale(simDaysPerRealSecond: number): void` to `EngineHandle` in `src/core/engine/engine-handle.ts` that calls `this.simulationSystem.setTimeScale(simDaysPerRealSecond)`; also update `src/core/engine/system-ports.ts` `SimulationSystem` interface if `setTimeScale` needs to be on the port
 
-- [ ] T025 [US3] Add keyboard time scale controls to `apps/demo/main.ts`: key `=`/`+` doubles `simDaysPerRealSecond` (up to max 365250); key `-` halves it (down to min 0.001); key `0` resets to `1.0`; call `engine.setTimeScale(newRate)` on each change; display current rate in the demo UI status line
+- [x] T025 [US3] Add keyboard time scale controls to `apps/demo/main.ts`: key `=`/`+` doubles `simDaysPerRealSecond` (up to max 365250); key `-` halves it (down to min 0.001); key `0` resets to `1.0`; call `engine.setTimeScale(newRate)` on each change; display current rate in the demo UI status line
 
 **Checkpoint**: Pressing `+` in the demo accelerates orbital motion; pressing `-` slows it; pressing `0` resets to 1 day/sec. No visual jump occurs when rate changes.
 
@@ -136,13 +136,13 @@ halve it, press `0` to reset; confirm all orbital motion remains smooth with no 
 
 **Purpose**: Stability testing, public API surface, and full regression.
 
-- [ ] T026 [P] Add long-run stability integration test to `tests/integration/solar-system-sim.integration.test.ts`: advance simulation at `simDaysPerRealSecond=365250` (1000 years per real second) for 10 real seconds (= 10 000 simulated years) using 60-fps ticks; assert all 8 planet `bodyStates` positions are finite (no NaN, no Infinity) after the run
+- [x] T026 [P] Add long-run stability integration test to `tests/integration/solar-system-sim.integration.test.ts`: advance simulation at `simDaysPerRealSecond=365250` (1000 years per real second) for 10 real seconds (= 10 000 simulated years) using 60-fps ticks; assert all 8 planet `bodyStates` positions are finite (no NaN, no Infinity) after the run
 
-- [ ] T027 [P] Update `src/index.ts` to export `KeplerianOrbitProfile`, `AxialRotation`, `TimeScaleConfig`, `SimBodyState` from the public engine surface alongside existing exports
+- [x] T027 [P] Update `src/index.ts` to export `KeplerianOrbitProfile`, `AxialRotation`, `TimeScaleConfig`, `SimBodyState` from the public engine surface alongside existing exports
 
-- [ ] T028 Run `npm test` and confirm ALL tests pass (unit, integration, contract)
+- [x] T028 Run `npm test` and confirm ALL tests pass (unit, integration, contract)
 
-- [ ] T029 Run `npm run demo` and verify all items on the manual acceptance checklist in `specs/003-realistic-solar-system/quickstart.md` section 5
+- [x] T029 Run `npm run demo` and verify all items on the manual acceptance checklist in `specs/003-realistic-solar-system/quickstart.md` section 5
 
 ---
 

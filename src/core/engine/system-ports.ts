@@ -12,6 +12,7 @@ export interface SimulationSystem {
   update(time: TimeContext): void;
   applyScene(scene: SceneConfiguration): void;
   getSnapshot(): SimulationSnapshot;
+  setTimeScale(rate: number): void;
 }
 
 export interface Renderer {

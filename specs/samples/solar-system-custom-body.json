@@ -1,0 +1,426 @@
+{
+  "sceneId": "solar-system-custom-body",
+  "name": "Solar System with Custom Extension Body",
+  "coordinateSystem": "right-handed",
+  "sourceMetadata": {
+    "epoch": "J2000.0",
+    "source": "NASA/JPL Horizons System",
+    "referenceDate": "2026-01-01T00:00:00Z",
+    "notes": "Custom-body variant derived from solar-system-complete.json. The extra body demonstrates JSON-only scene extension."
+  },
+  "scaleProfile": {
+    "minZoom": 1,
+    "maxZoom": 10000,
+    "renderUnitsPerAU": 100
+  },
+  "timeScale": {
+    "simDaysPerRealSecond": 1
+  },
+  "bodies": [
+    {
+      "bodyId": "sun",
+      "type": "star",
+      "size": 5,
+      "initialPosition": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.0139,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 0,
+        "eccentricity": 0,
+        "inclinationDeg": 0,
+        "longitudeAscendingNodeDeg": 0,
+        "argumentPeriapsisDeg": 0,
+        "meanAnomalyEpochDeg": 0,
+        "angularSpeed": 0,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 25.38,
+        "axialTiltDeg": 7.25,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "mercury",
+      "type": "planet",
+      "size": 0.38,
+      "initialPosition": {
+        "x": 0.387,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.00417,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 0.387099,
+        "eccentricity": 0.20563,
+        "inclinationDeg": 7.005,
+        "longitudeAscendingNodeDeg": 48.331,
+        "argumentPeriapsisDeg": 29.124,
+        "meanAnomalyEpochDeg": 174.796,
+        "angularSpeed": 4.0923,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 58.646,
+        "axialTiltDeg": 0.034,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "venus",
+      "type": "planet",
+      "size": 0.949,
+      "initialPosition": {
+        "x": 0.723,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.00003,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 0.723332,
+        "eccentricity": 0.006772,
+        "inclinationDeg": 3.39458,
+        "longitudeAscendingNodeDeg": 76.681,
+        "argumentPeriapsisDeg": 54.884,
+        "meanAnomalyEpochDeg": 50.115,
+        "angularSpeed": 1.6021,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 243.025,
+        "axialTiltDeg": 177.36,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "earth",
+      "type": "planet",
+      "size": 1,
+      "initialPosition": {
+        "x": 1,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.0175,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 1,
+        "eccentricity": 0.016709,
+        "inclinationDeg": 0,
+        "longitudeAscendingNodeDeg": 0,
+        "argumentPeriapsisDeg": 102.947,
+        "meanAnomalyEpochDeg": 100.464,
+        "angularSpeed": 0.9856,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 0.99726968,
+        "axialTiltDeg": 23.44,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "moon",
+      "type": "moon",
+      "size": 0.2724,
+      "initialPosition": {
+        "x": 1.00257,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.01667,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "earth",
+        "semiMajorAxisAU": 0.00257,
+        "eccentricity": 0.0549,
+        "inclinationDeg": 5.145,
+        "longitudeAscendingNodeDeg": 125.08,
+        "argumentPeriapsisDeg": 318.15,
+        "meanAnomalyEpochDeg": 135.27,
+        "angularSpeed": 0.1096,
+        "phaseOffset": 0,
+        "siderealPeriodDays": 27.3216
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 27.3216,
+        "axialTiltDeg": 1.54,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "mars",
+      "type": "planet",
+      "size": 0.532,
+      "initialPosition": {
+        "x": 1.524,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.0168,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 1.523688,
+        "eccentricity": 0.093315,
+        "inclinationDeg": 1.85061,
+        "longitudeAscendingNodeDeg": 49.578,
+        "argumentPeriapsisDeg": 286.502,
+        "meanAnomalyEpochDeg": 19.412,
+        "angularSpeed": 0.5240,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 1.026,
+        "axialTiltDeg": 25.19,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "jupiter",
+      "type": "planet",
+      "size": 11.21,
+      "initialPosition": {
+        "x": 5.203,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.1771,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 5.2026,
+        "eccentricity": 0.048495,
+        "inclinationDeg": 1.3053,
+        "longitudeAscendingNodeDeg": 100.464,
+        "argumentPeriapsisDeg": 273.867,
+        "meanAnomalyEpochDeg": 20.02,
+        "angularSpeed": 0.08308,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 0.41354,
+        "axialTiltDeg": 3.13,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "saturn",
+      "type": "planet",
+      "size": 9.45,
+      "initialPosition": {
+        "x": 9.537,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.1637,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 9.53707,
+        "eccentricity": 0.055546,
+        "inclinationDeg": 2.48446,
+        "longitudeAscendingNodeDeg": 113.715,
+        "argumentPeriapsisDeg": 339.392,
+        "meanAnomalyEpochDeg": 222.436,
+        "angularSpeed": 0.03393,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 0.43884,
+        "axialTiltDeg": 26.73,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "uranus",
+      "type": "planet",
+      "size": 4.01,
+      "initialPosition": {
+        "x": 19.191,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.1035,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 19.1913,
+        "eccentricity": 0.047318,
+        "inclinationDeg": 0.76986,
+        "longitudeAscendingNodeDeg": 74.016,
+        "argumentPeriapsisDeg": 99.524,
+        "meanAnomalyEpochDeg": 47.167,
+        "angularSpeed": 0.011672,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 0.71833,
+        "axialTiltDeg": 97.77,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "neptune",
+      "type": "planet",
+      "size": 3.88,
+      "initialPosition": {
+        "x": 30.069,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.1041,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 30.069,
+        "eccentricity": 0.008606,
+        "inclinationDeg": 1.76917,
+        "longitudeAscendingNodeDeg": 131.721,
+        "argumentPeriapsisDeg": 276.045,
+        "meanAnomalyEpochDeg": 305.432,
+        "angularSpeed": 0.006021,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 0.6713,
+        "axialTiltDeg": 28.32,
+        "initialPhaseDeg": 0
+      }
+    },
+    {
+      "bodyId": "ceres",
+      "type": "planet",
+      "size": 0.074,
+      "initialPosition": {
+        "x": 2.77,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "angularSpeed": 0.02,
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "phaseOffset": 0
+      },
+      "orbit": {
+        "model": "keplerian",
+        "centerBodyId": "sun",
+        "semiMajorAxisAU": 2.77,
+        "eccentricity": 0.0758,
+        "inclinationDeg": 10.6,
+        "longitudeAscendingNodeDeg": 80.3,
+        "argumentPeriapsisDeg": 73.6,
+        "meanAnomalyEpochDeg": 95.989,
+        "angularSpeed": 0.216,
+        "phaseOffset": 0
+      },
+      "axialRotation": {
+        "siderealPeriodDays": 0.3781,
+        "axialTiltDeg": 4,
+        "initialPhaseDeg": 0
+      }
+    }
+  ],
+  "lights": [
+    {
+      "lightId": "sun-light",
+      "sourceBodyId": "sun",
+      "intensity": 1,
+      "range": 100
+    }
+  ]
+}
