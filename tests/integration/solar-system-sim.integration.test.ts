@@ -79,4 +79,39 @@ describe("solar system simulation integration", () => {
       expect(snapshot.bodyPositions[id]).toBeUndefined();
     }
   });
+
+  it("all 8 planets remain numerically stable after 10000 simulated years at 1000x acceleration", () => {
+    const sim = new SimulationSystem();
+    // 60 fps: ~0.0167 seconds per tick. Set rate to 365250 to get ~1000 years per real second.
+    const timeSource = new TestTimeSource(0, 1 / 60);
+    const ticksPerSecond = 60;
+    const realSeconds = 10;
+    const totalTicks = ticksPerSecond * realSeconds; // 600 ticks
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sim.applyScene(solarSystemScene as any);
+    sim.setTimeScale(365250); // ~1000 simulated years per real second
+
+    for (let i = 0; i < totalTicks; i++) {
+      sim.update(timeSource.sample());
+    }
+
+    const snapshot = sim.getSnapshot();
+
+    // All planet positions should be finite (no NaN, no Infinity, no drift)
+    for (const id of PLANET_IDS) {
+      const body = snapshot.bodyStates[id];
+      expect(body, `${id} should be present in bodyStates`).toBeDefined();
+      expect(isFinite(body.positionAU.x), `${id}.x should be finite after long run`).toBe(true);
+      expect(isFinite(body.positionAU.y), `${id}.y should be finite after long run`).toBe(true);
+      expect(isFinite(body.positionAU.z), `${id}.z should be finite after long run`).toBe(true);
+
+      // Positions should be in a reasonable range (not drifted to infinity)
+      const distance = Math.sqrt(
+        body.positionAU.x ** 2 + body.positionAU.y ** 2 + body.positionAU.z ** 2,
+      );
+      expect(distance).toBeGreaterThan(0);
+      expect(distance).toBeLessThan(40); // Farthest planet (Neptune) is ~30 AU
+    }
+  });
 });
