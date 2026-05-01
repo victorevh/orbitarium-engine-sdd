@@ -71,21 +71,40 @@ export interface Renderer {
   detach(): void;
 }
 
+export interface TimePort {
+  source: TimeSource;
+}
+
+export interface SystemPorts {
+  navigationController: NavigationController;
+  simulationSystem: SimulationSystem;
+  renderer: Renderer;
+  time: TimePort;
+}
+
 export interface RealTimeSource extends TimeSource {}
 ```
 
 ## Behavioral Guarantees
 
 - EngineHandle acts only as lifecycle and orchestration coordinator.
+- `start` requires a previously validated, loaded scene.
 - EngineHandle must obtain frame time exclusively through TimeSource.
 - NavigationController and SimulationSystem must consume `TimeContext` passed by EngineHandle.
 - NavigationController and SimulationSystem must not call `Date.now` or `performance.now` directly.
 - Default TimeSource implementation is real-time (`RealTimeSource`) when no custom source is supplied.
 - `loadScene` must perform full validation and return aggregated errors.
+- `loadScene` validation must allow `star` circular roots with `orbit.radius = 0` and reject non-star circular orbits where `orbit.radius <= 0`.
 - Scene activation must not occur if `ValidationResult.valid` is false.
-- `setNavigationMode('orbital')` must require a valid target body.
+- `setNavigationMode('orbital')` must require a target body ID that exists in the loaded scene.
 - API must honor real-time progression only in MVP (no exposed pause/time scaling controls).
 - All transforms and vectors are interpreted as right-handed coordinates.
+- Navigation movement semantics must remain camera-relative for intuitive directional control.
+- Runtime rendering must include persistent spatial references (background stars and/or grid) to preserve orientation context.
+- Development visual helpers (axes/markers) may be enabled for diagnostics and must not alter simulation state.
+- Free-mode control mapping is canonical: `W/A/S/D` horizontal translation, `Q/E` vertical translation, mouse movement for camera rotation.
+- Orbital-mode control mapping is canonical: mouse drag rotates around target body and scroll controls zoom distance.
+- Mode transitions must preserve intuitive control semantics without direction inversion or unexpected remapping.
 
 ## Error Semantics
 

@@ -11,6 +11,7 @@ Fields:
 - `sceneId` (string, required): Unique scene identifier.
 - `name` (string, required): Human-readable scene name.
 - `coordinateSystem` (enum, required): Must be `right-handed`.
+- `spatialReferences` (SpatialReferenceSettings, required): Orientation and movement feedback visuals.
 - `scaleProfile` (object, required): Global scale and zoom behavior parameters.
 - `bodies` (array<CelestialBodyDefinition>, required): All celestial objects in scene.
 - `lights` (array<LightingSourceDefinition>, required): Star-linked lighting definitions.
@@ -19,6 +20,32 @@ Validation rules:
 - `sceneId` must be unique within loaded catalog.
 - `coordinateSystem` must equal `right-handed`.
 - At least one valid star-linked light source must exist.
+- At least one persistent spatial reference (`backgroundStars` or `grid`) must be enabled.
+
+## Entity: SpatialReferenceSettings
+
+Description: Minimal visual feedback for orientation and movement context.
+
+Fields:
+- `backgroundStars` (boolean, required): Enables persistent starfield reference.
+- `grid` (boolean, required): Enables spatial grid reference.
+- `developmentHelpers` (DevelopmentHelperSettings, required): Optional debug-oriented helpers.
+
+Validation rules:
+- At least one of `backgroundStars` or `grid` must be true.
+- Development helpers are optional and must not affect simulation outputs.
+
+## Entity: DevelopmentHelperSettings
+
+Description: Optional development-only spatial diagnostics.
+
+Fields:
+- `enabled` (boolean, required): Master toggle for helper visuals.
+- `axes` (boolean, optional): Axis triad visualization.
+- `markers` (boolean, optional): Positional markers.
+
+Validation rules:
+- `axes` and `markers` can only be enabled when `enabled` is true.
 
 ## Entity: CelestialBodyDefinition
 
@@ -45,7 +72,7 @@ Description: Defines circular/elliptical orbital motion.
 Fields:
 - `model` (enum, required): `circular | elliptical`.
 - `centerBodyId` (string, required): Orbital center reference.
-- `radius` (number, required when `model=circular`): Positive scalar.
+- `radius` (number, required when `model=circular`): Non-negative for stars (0 allowed as root), strictly positive for non-stars.
 - `semiMajorAxis` (number, required when `model=elliptical`): Positive scalar.
 - `semiMinorAxis` (number, required when `model=elliptical`): Positive scalar.
 - `angularSpeed` (number, required): Angular velocity in radians/second.
@@ -53,7 +80,8 @@ Fields:
 
 Validation rules:
 - Exactly one model branch is valid (`radius` xor ellipse axes).
-- Axes/radius must be positive.
+- For circular model: star bodies may use `radius = 0`; non-star bodies must use `radius > 0`.
+- Elliptical axes must be positive.
 - `angularSpeed` must be finite.
 
 ## Entity: RotationProfile
@@ -118,13 +146,46 @@ Fields:
 - `mode` (enum, required): `free | orbital`.
 - `position` (Vector3, required): Camera/navigation position.
 - `orientation` (Quaternion or equivalent, required): Camera orientation.
+- `activeControlProfile` (enum, required): `free-controls | orbital-controls`.
 - `inertiaEnabled` (boolean, required): Whether inertia smoothing is active.
 - `orbitalTargetBodyId` (string, optional): Required in orbital mode.
 - `lastUpdateTick` (integer, required): Last tick processed from TimeContext.
 
 Validation rules:
 - `orbitalTargetBodyId` required when `mode=orbital`.
+- `activeControlProfile` must match mode (`free -> free-controls`, `orbital -> orbital-controls`).
 - `lastUpdateTick` must be >= 0.
+
+## Entity: NavigationControlMapping
+
+Description: Canonical input-to-action mapping used by navigation systems.
+
+Fields:
+- `freeMode` (FreeModeControlMapping, required): Camera-relative movement controls.
+- `orbitalMode` (OrbitalModeControlMapping, required): Target-centric orbit controls.
+
+Validation rules:
+- Free mode mapping must include `W/A/S/D` for horizontal translation and `Q/E` for vertical translation.
+- Free mode mapping must include mouse-based camera rotation.
+- Orbital mode mapping must include mouse drag for orbit rotation and scroll for zoom.
+
+## Entity: FreeModeControlMapping
+
+Description: Input map for unconstrained camera-relative navigation.
+
+Fields:
+- `forwardBackward` (string, required): `W/S`.
+- `leftRight` (string, required): `A/D`.
+- `vertical` (string, required): `Q/E`.
+- `look` (string, required): `mouse-move`.
+
+## Entity: OrbitalModeControlMapping
+
+Description: Input map for orbiting around a selected target body.
+
+Fields:
+- `orbitRotation` (string, required): `mouse-drag`.
+- `zoom` (string, required): `scroll`.
 
 ## Relationships
 

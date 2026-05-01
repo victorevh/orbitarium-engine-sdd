@@ -1,0 +1,35 @@
+{
+  "sceneId": "sample-minimal",
+  "name": "Minimal Star System",
+  "coordinateSystem": "right-handed",
+  "scaleProfile": {
+    "minZoom": 0.001,
+    "maxZoom": 10000
+  },
+  "bodies": [
+    {
+      "bodyId": "sun-1",
+      "type": "star",
+      "size": 200,
+      "initialPosition": { "x": 0, "y": 0, "z": 0 },
+      "rotation": {
+        "angularSpeed": 0.02,
+        "axis": { "x": 0, "y": 1, "z": 0 }
+      },
+      "orbit": {
+        "model": "circular",
+        "centerBodyId": "sun-1",
+        "radius": 0.1,
+        "angularSpeed": 0
+      }
+    }
+  ],
+  "lights": [
+    {
+      "lightId": "sun-light",
+      "sourceBodyId": "sun-1",
+      "intensity": 1,
+      "range": 1000000
+    }
+  ]
+}

@@ -43,13 +43,13 @@ Rationale: Ensures consistent math behavior, portable scenes, and simpler contra
 
 Alternatives considered: Per-scene handedness toggles. Rejected because conversion paths increase complexity and risk subtle transform bugs.
 
-## Decision 6: Performance and Test Strategy
+## Decision 6: TimeSource Architecture Boundary
 
-Decision: Target 60 FPS with up to 300 active bodies on reference desktop hardware, with automated benchmark scenes and deterministic scripted navigation paths.
+Decision: All time-dependent behavior systems consume `TimeContext` sampled by EngineHandle through a `TimeSource`; behavior systems do not read host clocks directly.
 
-Rationale: Aligns with clarified performance outcomes and keeps validation measurable.
+Rationale: Preserves deterministic tests, keeps EngineHandle as orchestrator only, and prevents hidden clock coupling in navigation and simulation logic.
 
-Alternatives considered: No explicit target in v1, or 1000-body target. Rejected because no target is not testable, and 1000 bodies is high-risk for early scope.
+Alternatives considered: Calling `Date.now` or `performance.now` inside each system. Rejected because it introduces nondeterminism and violates module boundaries.
 
 ## Clarification Resolution Status
 
